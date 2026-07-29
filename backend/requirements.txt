@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+openai
+python-dotenv
+Pillow
+python-multipart

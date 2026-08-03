@@ -39,6 +39,7 @@ def main():
         contrast_method="clahe",
         denoise_method="bilateral",
         threshold_method="otsu",
+        rotate_angle=10,
     )
 
     results = pipeline.process(args.input)

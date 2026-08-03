@@ -39,10 +39,12 @@ class PreprocessingPipeline:
         contrast_method: str = "clahe",
         denoise_method: str = "bilateral",
         threshold_method: str = "otsu",
+        rotate_angle: float = 0,
     ):
         self.contrast_method = contrast_method
         self.denoise_method = denoise_method
         self.threshold_method = threshold_method
+        self.rotate_angle = rotate_angle
 
     def process(self, image_path: str | Path) -> dict[str, np.ndarray]:
 
@@ -77,7 +79,7 @@ class PreprocessingPipeline:
         perspective = PerspectiveCorrection.warp(image)
         results["perspective"] = perspective
 
-        rotation = RotationCorrection.rotate(perspective)
+        rotation = RotationCorrection.rotate_angle(perspective, angle=self.rotate_angle)
         results["rotation"] = rotation
 
         return results

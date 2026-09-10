@@ -1,4 +1,58 @@
-/** Root composition point; no user interface is defined in the skeleton. */
-export default function App() {
-  return null;
+import { useState } from 'react'
+import {
+  ArrowRightOnRectangleIcon, ArrowUpTrayIcon, BellIcon, CheckCircleIcon,
+  ChevronRightIcon, ClipboardDocumentListIcon, CpuChipIcon, DocumentTextIcon,
+  EyeIcon, FunnelIcon, MagnifyingGlassIcon, PhotoIcon, PlusIcon,
+  Squares2X2Icon
+} from '@heroicons/react/24/outline'
+import { PreprocessPage } from './features/preprocess/PreprocessPage'
+
+type Page = 'dashboard' | 'cases' | 'capture' | 'preprocess' | 'analysis' | 'reports'
+
+const cases = [
+  ['HS-2026-0718', 'Dấu vết giày tại hiện trường', 'PC02 – Hà Nội', 'Đang xử lý', '18/07/2026 14:42'],
+  ['HS-2026-0716', 'Trộm cắp tài sản cửa hàng', 'CA Q. Hoàn Kiếm', 'Chờ xác nhận', '16/07/2026 09:15'],
+  ['HS-2026-0709', 'Khám nghiệm hiện trường vụ án', 'PC09 – Hải Phòng', 'Hoàn thành', '09/07/2026 17:30'],
+  ['HS-2026-0688', 'Xâm nhập khu vực cấm', 'CA TP. Bắc Ninh', 'Mới tiếp nhận', '02/07/2026 10:08'],
+  ['HS-2026-0687', 'Đột nhập kho số thành phố', 'PC09 – TP.HCM', 'Cần bổ sung', '25/06/2026 12:04'],
+]
+
+function Icon({name, className = 'icon'}: {name: string, className?: string}) {
+  const map: Record<string, React.ElementType> = { dashboard: Squares2X2Icon, cases: ClipboardDocumentListIcon, capture: PhotoIcon, preprocess: CpuChipIcon, analysis: CpuChipIcon, reports: DocumentTextIcon }
+  const C = map[name] || Squares2X2Icon
+  return <C className={className}/>
 }
+
+function Sidebar({page, setPage}: {page: Page, setPage: (page: Page) => void}) {
+  const menu: {id: Page, label: string}[] = [
+    {id:'dashboard', label:'Tổng quan'}, {id:'cases', label:'Hồ sơ vụ việc'},
+    {id:'capture', label:'Thu nhận & số hoá'}, {id:'preprocess', label:'Tiền xử lý ảnh'}, {id:'analysis', label:'Giám định dấu vết'}, {id:'reports', label:'Báo cáo giám định'}
+  ]
+  return <aside className="sidebar">
+    <div className="brand"><div className="brand-mark">⌁</div><div><strong>GIÁM ĐỊNH DẤU VẾT<br/>GIÀY DÉP</strong><small>FORENSIC AI SUPPORT</small></div></div>
+    <div className="side-divider" />
+    <p className="side-label">NGHIỆP VỤ</p>
+    <nav>{menu.map(item => <button key={item.id} onClick={() => setPage(item.id)} className={page === item.id ? 'nav-item active' : 'nav-item'}><Icon name={item.id}/>{item.label}</button>)}</nav>
+    <div className="system-state"><span /> Hệ thống AI an toàn</div>
+    <div className="sidebar-foot">● &nbsp; Mạng nội bộ an toàn<br/><small>Hệ thống sẵn sàng hoạt động</small></div>
+  </aside>
+}
+
+function Header({title, description}: {title:string, description:string}) { return <header className="topbar"><div><h1>{title}</h1><p>{description}</p></div><div className="profile"><BellIcon/><div className="avatar">AI</div><div><b>Phòng giám định AI</b><small>Hệ thống demo</small></div></div></header> }
+
+function Steps({current = 2}: {current?:number}) { const steps=['Thông tin hồ sơ','Thu nhận ảnh','Tiền xử lý','Phân tích so khớp','Báo cáo']; return <section className="steps"><div className="step-labels">{steps.map((s,i)=><span className={i<=current?'done':''} key={s}>{i<4 && i<=current?'● ':'○ '}{s}</span>)}</div><div className="progress"><i style={{width:`${Math.min(100,(current+1)*25)}%`}}/></div></section> }
+
+function Dashboard({setPage}: {setPage:(p:Page)=>void}) { return <><Header title="Tổng quan hệ thống" description="Theo dõi tình trạng xử lý hồ sơ giám định"/><main className="content"><div className="welcome"><div><p>PHÒNG GIÁM ĐỊNH KỸ THUẬT HÌNH SỰ</p><h2>Chào mừng trở lại, Giám định viên</h2><span>Hệ thống hỗ trợ phân tích dấu vết giày dép bằng AI.</span></div><button onClick={()=>setPage('cases')}><PlusIcon/> Tạo hồ sơ mới</button></div><div className="stats"><Stat num="24" label="Hồ sơ đang xử lý" color="teal"/><Stat num="08" label="Chờ tiếp nhận" color="blue"/><Stat num="16" label="Đã hoàn thành tháng này" color="green"/><Stat num="92%" label="Độ sẵn sàng hệ thống" color="amber"/></div><section className="grid-two"><div className="card"><div className="section-title"><div><h3>Hoạt động gần đây</h3><p>Các hồ sơ được cập nhật mới nhất</p></div><button className="link" onClick={()=>setPage('cases')}>Xem tất cả <ChevronRightIcon/></button></div><div className="activity-list">{cases.slice(0,4).map(([id,name,unit,status])=><div className="activity" key={id}><div className="case-icon"><ClipboardDocumentListIcon/></div><div><b>{name}</b><p>{id} · {unit}</p></div><span className={'badge '+statusClass(status)}>{status}</span></div>)}</div></div><div className="card pipeline"><h3>Quy trình xử lý</h3><p>Trạng thái hồ sơ đang thực hiện</p>{['Tiếp nhận hồ sơ','Thu nhận ảnh dấu vết','Tiền xử lý ảnh','Phân tích & so khớp','Lập báo cáo'].map((s,i)=><div className="pipeline-row" key={s}><span className={i<3?'circle ok':'circle'}>{i<3?'✓':i+1}</span><div><b>{s}</b><small>{i<3?'Đã hoàn tất':'Sẵn sàng thực hiện'}</small></div></div>)}</div></section></main></> }
+function Stat({num,label,color}:{num:string,label:string,color:string}) { return <div className="stat"><span className={'stat-icon '+color}><CpuChipIcon/></span><div><b>{num}</b><p>{label}</p></div></div> }
+function statusClass(s:string) { return s==='Hoàn thành'?'success':s==='Cần bổ sung'?'danger':s==='Mới tiếp nhận'?'neutral':'info' }
+
+function Cases({setPage}:{setPage:(p:Page)=>void}) { return <><Header title="Hồ sơ vụ việc" description="Quản lý và theo dõi các vụ việc cần giám định"/><main className="content"><div className="action-row"><div className="search"><MagnifyingGlassIcon/><input placeholder="Tìm kiếm mã hồ sơ, tên vụ việc..."/></div><select><option>Tất cả trạng thái</option></select><select><option>30 ngày gần nhất</option></select><button className="outline"><FunnelIcon/> Bộ lọc nâng cao</button><button onClick={()=>setPage('capture')}><PlusIcon/> Tạo hồ sơ mới</button></div><div className="card table-card"><table><thead><tr><th>MÃ HỒ SƠ</th><th>VỤ VIỆC</th><th>ĐƠN VỊ THỤ LÝ</th><th>TRẠNG THÁI</th><th>CẬP NHẬT</th><th>THAO TÁC</th></tr></thead><tbody>{cases.map(row=><tr key={row[0]}><td><b>{row[0]}</b><small>Tiếp nhận 18/07/2026</small></td><td>{row[1]}<small>Dấu vết giày dép tại hiện trường</small></td><td>{row[2]}</td><td><span className={'badge '+statusClass(row[3])}>{row[3]}</span></td><td>{row[4]}</td><td><button className="icon-button" onClick={()=>setPage('analysis')}><EyeIcon/></button></td></tr>)}</tbody></table><div className="table-footer">Hiển thị 1–5 trong tổng số 24 hồ sơ <span>‹ <b>1</b> 2 3 ›</span></div></div></main></> }
+
+function Capture({setPage}:{setPage:(p:Page)=>void}) { return <><Header title="Thu nhận và số hoá" description="Tải ảnh dấu vết và tạo dữ liệu cho hồ sơ"/><main className="content"><Steps current={1}/><section className="card capture-card"><div className="section-title"><div><h3>Ảnh dấu vết hiện trường</h3><p>HS-2026-0718 · Dấu vết giày tại hiện trường</p></div><span className="badge success">Hồ sơ đang xử lý</span></div><div className="upload-zone"><ArrowUpTrayIcon/><h3>Sẵn sàng tải ảnh dấu vết</h3><p>Mở bước tiền xử lý để kéo thả JPG, PNG hoặc TIFF và tạo point cloud.</p><button onClick={()=>setPage('preprocess')}><PhotoIcon/> Mở tiền xử lý ảnh</button></div></section><div className="bottom-actions"><button className="outline" onClick={()=>setPage('cases')}>Quay lại hồ sơ</button><button onClick={()=>setPage('preprocess')}>Tiếp tục tiền xử lý <ChevronRightIcon/></button></div></main></> }
+
+function Analysis({setPage}:{setPage:(p:Page)=>void}) { return <><Header title="Kết quả phân tích đặc trưng" description="AI Footwear Forensics · Báo cáo nhận diện dấu vết giày"/><main className="content"><Steps current={3}/><section className="analysis-layout"><div className="card image-panel"><div className="section-title"><div><h3>Ảnh dấu vết đã tải lên</h3><p>mẫu so sánh (5).png</p></div><button className="link">Xoá ảnh</button></div><div className="footprint"><svg viewBox="0 0 180 360" aria-label="Dấu vết giày mẫu"><path d="M46 12 Q90 0 135 19 L150 87 137 148 160 230 147 332 Q90 355 34 330 L21 236 42 160 27 86Z" fill="#f4f5f5" stroke="#ccd3d7" strokeWidth="4"/><g stroke="#24313b" strokeWidth="7" fill="none"><path d="M48 40Q90 16 132 45M39 67Q90 40 141 73M34 95Q89 70 145 101M35 126Q89 100 142 130M48 165h85M40 192h100M31 223h119M27 255h124M30 285h117M37 315h104"/><path d="M63 31L116 149M56 175L124 329M125 166L61 330"/></g><circle cx="91" cy="119" r="22" fill="none" stroke="#24313b" strokeWidth="6"/></svg></div></div><div className="card report-panel"><div className="report-heading"><span className="check"><CheckCircleIcon/></span><div><h2>Báo cáo phân tích</h2><p>Kết quả được trả về từ mô hình AI</p></div><span className="badge success">Đã hoàn thành</span></div><Result title="Chất lượng ảnh" icon="◉"><p>Độ sắc nét tốt, dấu vết đầy đủ và đủ điều kiện phân tích.</p></Result><Result title="Phân loại" icon="▦"><div className="result-grid">{[['Danh mục','Giày dép'],['Loại giày','Bốt'],['Hãng giày','Chưa xác định'],['Tên mẫu giày','Chưa xác định'],['Chất liệu thân giày','Da']].map(x=><div className="result-cell" key={x[0]}><small>{x[0]} <em>Độ chính xác: 50%</em></small><b>{x[1]}</b></div>)}</div></Result><div className="report-split"><Result title="Đặc điểm riêng biệt" icon="⌁"><p>cleanliness: trung bình</p><p>condition: mòn nhẹ</p></Result><Result title="Lập luận sinh trắc học" icon="◌"><p>Chưa có dữ liệu đối chiếu.</p></Result></div><div className="bottom-actions"><button className="outline" onClick={()=>setPage('capture')}>Quay lại</button><button onClick={()=>setPage('reports')}>Tạo báo cáo <DocumentTextIcon/></button></div></div></section></main></> }
+function Result({title, icon, children}:{title:string,icon:string,children:React.ReactNode}) { return <section className="result"><h3><span>{icon}</span>{title}</h3>{children}</section> }
+function Reports() { return <><Header title="Báo cáo giám định" description="Lưu trữ và xuất kết quả giám định dấu vết"/><main className="content"><div className="empty card"><DocumentTextIcon/><h2>Kho báo cáo giám định</h2><p>Các báo cáo hoàn thiện sẽ xuất hiện tại đây. Chức năng xuất PDF và ký số sẽ được tích hợp ở phiên bản tiếp theo.</p><button>Tạo báo cáo mới</button></div></main></> }
+function Login({onLogin}:{onLogin:()=>void}) { return <div className="login"><section className="login-hero"><div className="login-brand"><div className="brand-mark">⌁</div><small>HỆ THỐNG KỸ THUẬT HÌNH SỰ</small><h1>Hỗ trợ giám định<br/>dấu vết giày dép</h1><p>Chuẩn hoá, truy xuất và phân tích dấu vết với sự hỗ trợ của trí tuệ nhân tạo.</p><div className="hero-pills"><span>▣ Thu nhận và số hoá ảnh</span><span>◉ Trích xuất đặc trưng bằng AI</span><span>⌁ Đối sánh dấu vết</span><span>▤ Lập báo cáo nghiệp vụ</span></div></div></section><section className="login-form"><div><h2>Đăng nhập hệ thống</h2><p>Đăng nhập bằng tài khoản được cấp bởi đơn vị quản lý.</p><label>Tên đăng nhập<input defaultValue="nguyen.minh.an"/></label><label>Mật khẩu<input type="password" defaultValue="12345678"/></label><div className="form-options"><label><input type="checkbox" defaultChecked/> Ghi nhớ đăng nhập</label><a>Quên mật khẩu?</a></div><button onClick={onLogin}><ArrowRightOnRectangleIcon/> Đăng nhập an toàn</button><div className="notice">Lưu ý: Hệ thống chỉ dành cho cán bộ nghiệp vụ được phân quyền.</div></div></section></div> }
+
+export default function App() { const [loggedIn,setLoggedIn]=useState(false); const [page,setPage]=useState<Page>('dashboard'); if(!loggedIn) return <Login onLogin={()=>setLoggedIn(true)}/>; const view={dashboard:<Dashboard setPage={setPage}/>,cases:<Cases setPage={setPage}/>,capture:<Capture setPage={setPage}/>,preprocess:<PreprocessPage onBack={()=>setPage('capture')}/>,analysis:<Analysis setPage={setPage}/>,reports:<Reports/>}[page]; return <div className="app-shell"><Sidebar page={page} setPage={setPage}/><div className="main-shell">{view}</div></div> }

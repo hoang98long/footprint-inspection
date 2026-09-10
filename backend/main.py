@@ -1,12 +1,5 @@
-"""FastAPI application entry point; routes are intentionally not registered in the skeleton."""
+"""Application entry point. Business logic lives under :mod:`app`."""
 
-from fastapi import FastAPI
+from app.application import create_application
 
-
-app = FastAPI(
-    title="Footprint Inspection",
-    version="0.1.0",
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None,
-)
+app = create_application()

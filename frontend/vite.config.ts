@@ -1,7 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Vite build configuration; API proxying can be added after endpoint contracts exist.
 export default defineConfig({
   plugins: [react()],
+  server: {
+    host: "0.0.0.0",
+    proxy: {
+      "/api": "http://backend:8000",
+      "/health": "http://backend:8000",
+    },
+  },
 });

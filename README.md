@@ -101,3 +101,7 @@ npm run dev
 3. Hiện thực pipeline xử lý ảnh, trích xuất đặc trưng và đánh giá chất lượng.
 4. Tích hợp vector search, matching và mô hình AI có versioning.
 5. Xây giao diện điều hành, báo cáo PDF/JSON và bộ kiểm thử end-to-end.
+
+## Image preprocessing baseline
+
+The MVP exposes `POST /api/v1/preprocess` for the grayscale → Pillow FIND_EDGES → invert → darkness threshold → 2D point-cloud flow. The React application includes the **Tiền xử lý ảnh** screen for upload, threshold tuning, artifacts, and statistics. See [image preprocessing documentation](docs/image-preprocessing.md) for its contract and limitations.

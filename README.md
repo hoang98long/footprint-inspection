@@ -105,3 +105,7 @@ npm run dev
 ## Image preprocessing baseline
 
 The MVP exposes `POST /api/v1/preprocess` for the grayscale → Pillow FIND_EDGES → invert → darkness threshold → 2D point-cloud flow. The React application includes the **Tiền xử lý ảnh** screen for upload, threshold tuning, artifacts, and statistics. See [image preprocessing documentation](docs/image-preprocessing.md) for its contract and limitations.
+
+## ICP alignment and similarity baseline
+
+Phase 2 exposes `POST /api/v1/matching/align` and `POST /api/v1/matching/features`. It performs deterministic multi-start, two-way rigid ICP and produces a stable 35-feature similarity vector; it does not yet classify a pair. See [ICP and similarity documentation](docs/icp-and-similarity.md).

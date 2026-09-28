@@ -5,6 +5,7 @@ import type { PreprocessingResult } from './types'
 
 type Status = 'idle' | 'uploading' | 'processing' | 'success' | 'error'
 const acceptedTypes = new Set(['image/jpeg', 'image/png', 'image/tiff'])
+const acceptedExtensions = new Set(['jpg', 'jpeg', 'png', 'tif', 'tiff'])
 const experimentThresholds = [50, 85, 100, 128, 150, 180]
 
 function Artifact({ title, source }: { title: string; source?: string }) {
@@ -27,7 +28,8 @@ export function PreprocessPage({ onBack }: { onBack: () => void }) {
 
   const selectFile = (candidate?: File) => {
     if (!candidate) return
-    if (!acceptedTypes.has(candidate.type)) { setError('Chỉ hỗ trợ ảnh JPG, PNG hoặc TIFF.'); setStatus('error'); return }
+    const extension = candidate.name.split('.').pop()?.toLowerCase()
+    if (!acceptedTypes.has(candidate.type) && (!extension || !acceptedExtensions.has(extension))) { setError('Chỉ hỗ trợ ảnh JPG, PNG hoặc TIFF.'); setStatus('error'); return }
     if (candidate.size > 25 * 1024 * 1024) { setError('Dung lượng ảnh tối đa là 25 MB.'); setStatus('error'); return }
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     const url = URL.createObjectURL(candidate)
@@ -57,7 +59,7 @@ export function PreprocessPage({ onBack }: { onBack: () => void }) {
   const busy = status === 'processing' || status === 'uploading'
 
   return <main className="content preprocess-page">
-    <div className="preprocess-heading"><div><p className="eyebrow">IMAGE PREPROCESSING</p><h2>Tiền xử lý ảnh dấu giày</h2><p>Tạo point cloud 2D theo baseline Pillow FIND_EDGES, sẵn sàng cho ICP ở bước sau.</p></div><button className="outline" onClick={onBack}>Quay lại</button></div>
+    <div className="preprocess-heading"><div><p className="eyebrow">TIỀN XỬ LÝ ẢNH</p><h2>Tiền xử lý ảnh dấu giày</h2><p>Tạo Point Cloud 2D theo baseline Pillow FIND_EDGES, sẵn sàng cho ICP ở bước sau.</p></div><button className="outline" onClick={onBack}>Quay lại</button></div>
     <section className="preprocess-layout">
       <div className="card preprocess-controls">
         <h3>Ảnh dấu vết</h3>
@@ -67,16 +69,16 @@ export function PreprocessPage({ onBack }: { onBack: () => void }) {
           <button type="button" onClick={() => inputRef.current?.click()}><PhotoIcon /> Chọn ảnh</button>
         </div>
         {file && <div className="selected-file"><span><b>{file.name}</b><small>{dimensions ?? 'Đang đọc kích thước…'}</small></span><button aria-label="Xóa ảnh" onClick={reset}><XMarkIcon /></button></div>}
-        <section className="parameter-panel"><h3>Tham số tiền xử lý</h3><label>Threshold: <b>{threshold}</b><input type="range" min="0" max="255" value={threshold} onChange={event => setThreshold(Number(event.target.value))} /><input className="threshold-number" type="number" min="0" max="255" value={threshold} onChange={event => setThreshold(Math.min(255, Math.max(0, Number(event.target.value))))} /></label><label className="toggle-label"><input type="checkbox" checked={invert} onChange={event => setInvert(event.target.checked)} /><span /> Invert: {invert ? 'BẬT' : 'TẮT'}</label><p>Edge method: <b>Pillow FIND_EDGES</b></p></section>
+        <section className="parameter-panel"><h3>Tham số tiền xử lý</h3><label>Threshold: <b>{threshold}</b><input type="range" min="0" max="255" value={threshold} onChange={event => setThreshold(Number(event.target.value))} /><input className="threshold-number" type="number" min="0" max="255" value={threshold} onChange={event => setThreshold(Math.min(255, Math.max(0, Number(event.target.value))))} /></label><label className="toggle-label"><input type="checkbox" checked={invert} onChange={event => setInvert(event.target.checked)} /><span /> Đảo màu: {invert ? 'BẬT' : 'TẮT'}</label><p>Phương pháp phát hiện biên: <b>Pillow FIND_EDGES</b></p></section>
         {error && <p className="preprocess-error">{error}</p>}
-        <div className="preprocess-actions"><button className="outline" onClick={reset}><ArrowPathIcon /> Reset</button><button disabled={busy} onClick={run}><PlayIcon /> {busy ? 'Đang xử lý…' : 'Run Preprocessing'}</button></div>
+        <div className="preprocess-actions"><button className="outline" onClick={reset}><ArrowPathIcon /> Đặt lại</button><button disabled={busy} onClick={run}><PlayIcon /> {busy ? 'Đang xử lý…' : 'Chạy tiền xử lý'}</button></div>
       </div>
       <div className="preprocess-results">
-        <section className="preprocess-grid"><Artifact title="Original" source={result?.artifacts.original ?? previewUrl} /><Artifact title="Edge Detection" source={result?.artifacts.edges} /><Artifact title="Inverted" source={result?.artifacts.processed} /><Artifact title="Point Cloud" source={result?.artifacts.point_cloud} /></section>
-        {result && <section className="card preprocessing-statistics"><h3>Thống kê kết quả</h3><div><Stat label="Kích thước ảnh" value={`${result.image.width} × ${result.image.height}`} /><Stat label="Points extracted" value={result.statistics.num_points.toLocaleString()} /><Stat label="Bounding box" value={result.statistics.min_x === null ? '—' : `X: ${result.statistics.min_x} → ${result.statistics.max_x}; Y: ${result.statistics.min_y} → ${result.statistics.max_y}`} /><Stat label="Density" value={`${(result.statistics.density * 100).toFixed(2)}%`} /><Stat label="Threshold" value={String(result.preprocessing.threshold)} /><Stat label="Processing time" value={`${result.processing_time_ms.toFixed(2)} ms`} /></div></section>}
+        <section className="preprocess-grid"><Artifact title="Ảnh gốc" source={result?.artifacts.original ?? previewUrl} /><Artifact title="Phát hiện biên" source={result?.artifacts.edges} /><Artifact title="Ảnh đảo màu" source={result?.artifacts.processed} /><Artifact title="Point Cloud" source={result?.artifacts.point_cloud} /></section>
+        {result && <section className="card preprocessing-statistics"><h3>Thống kê kết quả</h3><div><Stat label="Kích thước ảnh" value={`${result.image.width} × ${result.image.height}`} /><Stat label="Số điểm trích xuất" value={result.statistics.num_points.toLocaleString()} /><Stat label="Khung bao Point Cloud" value={result.statistics.min_x === null ? '—' : `X: ${result.statistics.min_x} → ${result.statistics.max_x}; Y: ${result.statistics.min_y} → ${result.statistics.max_y}`} /><Stat label="Mật độ" value={`${(result.statistics.density * 100).toFixed(2)}%`} /><Stat label="Threshold" value={String(result.preprocessing.threshold)} /><Stat label="Thời gian xử lý" value={`${result.processing_time_ms.toFixed(2)} ms`} /></div></section>}
       </div>
     </section>
-    <section className="card threshold-comparison"><div><h3><BeakerIcon /> Compare Thresholds</h3><p>Thử các ngưỡng cố định để hỗ trợ nghiên cứu, không tự chọn ngưỡng tối ưu.</p></div><button className="outline" disabled={busy} onClick={compareThresholds}>Chạy so sánh</button>{comparison && <table><thead><tr><th>Threshold</th><th>Number of Points</th></tr></thead><tbody>{comparison.map(row => <tr key={row.threshold}><td>{row.threshold}</td><td>{row.points.toLocaleString()}</td></tr>)}</tbody></table>}</section>
+    <section className="card threshold-comparison"><div><h3><BeakerIcon /> So sánh Threshold</h3><p>Thử các ngưỡng cố định để hỗ trợ nghiên cứu, không tự chọn ngưỡng tối ưu.</p></div><button className="outline" disabled={busy} onClick={compareThresholds}>Chạy so sánh</button>{comparison && <table><thead><tr><th>Threshold</th><th>Số điểm</th></tr></thead><tbody>{comparison.map(row => <tr key={row.threshold}><td>{row.threshold}</td><td>{row.points.toLocaleString()}</td></tr>)}</tbody></table>}</section>
   </main>
 }
 

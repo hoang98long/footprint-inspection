@@ -21,4 +21,5 @@ class PreprocessingResult:
 
     @property
     def image_metadata(self) -> dict[str, int | str]:
+        """Dimensions refer to the original coordinate frame; point data uses grayscale L."""
         return {"width": self.original.width, "height": self.original.height, "mode": "L"}

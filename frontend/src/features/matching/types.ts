@@ -1,0 +1,2 @@
+export interface Alignment { rotation_angle: number; translation: number[]; rmse: number; iterations: number; converged: boolean; correspondence_count: number; proportion_overlap: number; selected_downsample_ratio: number; selected_initial_shift: string; selected_direction: string }
+export interface MatchingResult { alignment: Alignment; similarity: Record<string, number>; artifacts: { q_original: string; k_original: string; alignment_overlay: string }; timing: Record<string, number> }

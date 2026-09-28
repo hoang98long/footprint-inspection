@@ -28,8 +28,8 @@ Coordinates use `xy`: `x` is the image column and `y` is the image row. The full
 
 `POST /api/v1/preprocess` accepts multipart fields `image`, optional `threshold`, and optional `invert`. PNG, JPG/JPEG, and supported TIFF images are accepted up to 25 MB. The response contains base64 PNG artifacts for this MVP, statistics, and a bounded `preview_points` array. Invalid images, invalid thresholds, and empty point clouds return HTTP 400 with a structured error detail.
 
-The **Tiền xử lý ảnh** menu opens the upload, parameter, visualization, statistics, reset, and threshold-comparison UI. Try the listed thresholds to support manual tuning; the application does not select a “best” threshold.
+The **Tiền xử lý ảnh** menu opens the upload, parameter, visualization, statistics, reset, and threshold-comparison UI. Try the listed thresholds to support manual tuning; the application does not select a “best” threshold. Artifacts are bounded to a 1600-pixel maximum display dimension; this only affects returned visualizations, never original images or the point cloud used by ICP.
 
 ## Limitations and next step
 
-Artifacts are returned inline for MVP convenience, so very large images increase response size. No ICP, matching, similarity metric, feature extraction, or model inference is implemented. A future alignment module should consume the unchanged `np.ndarray[N, 2]` output directly.
+Artifacts are returned inline for MVP convenience, so very large images still increase response size, though display previews are bounded. Uploads are limited to 25 MB and 20 million decoded pixels. No ICP, matching, similarity metric, feature extraction, or model inference is implemented in this module. A future alignment module should consume the unchanged `np.ndarray[N, 2]` output directly.

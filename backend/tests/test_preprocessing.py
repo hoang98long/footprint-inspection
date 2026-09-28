@@ -8,6 +8,7 @@ from app.image_processing.preprocessing.config import PreprocessingConfig
 from app.image_processing.preprocessing.edge_detection import detect_edges, invert_image, load_grayscale_image
 from app.image_processing.preprocessing.pipeline import preprocess_shoeprint
 from app.image_processing.preprocessing.point_cloud import extract_point_cloud, point_cloud_statistics
+from app.image_processing.preprocessing.visualization import render_image_preview, render_point_cloud
 
 
 def test_load_image_and_grayscale_conversion() -> None:
@@ -50,3 +51,12 @@ def test_empty_point_cloud_statistics() -> None:
     points = extract_point_cloud(Image.new("L", (2, 2), 255), 0)
     assert points.shape == (0, 2)
     assert point_cloud_statistics(points, (2, 2))["num_points"] == 0
+
+
+def test_visualization_preview_keeps_source_cloud_and_aspect_ratio() -> None:
+    points = np.array([[0, 0], [3999, 1999]], dtype=np.int32)
+    cloud_before = points.copy()
+    point_preview = render_point_cloud(points, (4000, 2000), max_dimension=1000)
+    image_preview = render_image_preview(Image.new("L", (4000, 2000)), max_dimension=1000)
+    assert point_preview.size == image_preview.size == (1000, 500)
+    assert np.array_equal(points, cloud_before)

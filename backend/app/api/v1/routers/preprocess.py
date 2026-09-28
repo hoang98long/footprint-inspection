@@ -11,7 +11,7 @@ from PIL import Image, UnidentifiedImageError
 
 from app.image_processing.preprocessing.config import PreprocessingConfig
 from app.image_processing.preprocessing.pipeline import preprocess_shoeprint
-from app.image_processing.preprocessing.visualization import render_point_cloud
+from app.image_processing.preprocessing.visualization import render_image_preview, render_point_cloud
 from app.schemas.preprocessing import (
     ImageMetadata,
     PointCloudStatistics,
@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 SUPPORTED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/tiff"}
 SUPPORTED_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff"}
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+MAX_IMAGE_PIXELS = 20_000_000
 PREVIEW_POINT_LIMIT = 5_000
 
 
@@ -40,11 +41,13 @@ def _as_data_url(image: Image.Image) -> str:
     return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
-def _preview_points(points: np.ndarray) -> list[list[int]]:
+def _preview_points(points: np.ndarray, random_seed: int | None = 42) -> list[list[int]]:
+    """Return deterministic display samples while preserving the full ICP input."""
     if len(points) <= PREVIEW_POINT_LIMIT:
         sample = points
     else:
-        indexes = np.linspace(0, len(points) - 1, PREVIEW_POINT_LIMIT, dtype=int)
+        generator = np.random.default_rng(random_seed)
+        indexes = np.sort(generator.choice(len(points), PREVIEW_POINT_LIMIT, replace=False))
         sample = points[indexes]
     return sample.tolist()
 
@@ -58,7 +61,8 @@ async def preprocess_image(
     """Create an immutable full point cloud plus display-safe preview artifacts."""
     suffix = (image.filename or "").lower().rsplit(".", 1)
     extension = f".{suffix[-1]}" if len(suffix) == 2 else ""
-    if image.content_type not in SUPPORTED_CONTENT_TYPES or extension not in SUPPORTED_SUFFIXES:
+    # Some browsers omit MIME for TIFF; extension plus Pillow decode remains mandatory.
+    if extension not in SUPPORTED_SUFFIXES or (image.content_type and image.content_type not in SUPPORTED_CONTENT_TYPES):
         return _bad_request("INVALID_IMAGE", "Only PNG, JPG/JPEG, and TIFF images are supported.")
     if not 0 <= threshold <= 255:
         return _bad_request("INVALID_THRESHOLD", "Threshold must be between 0 and 255.")
@@ -67,6 +71,8 @@ async def preprocess_image(
         return _bad_request("INVALID_IMAGE", "Image is empty or exceeds the 25 MB upload limit.")
     try:
         source = Image.open(BytesIO(content))
+        if source.width * source.height > MAX_IMAGE_PIXELS:
+            raise ValueError("image exceeds maximum pixel count")
         source.load()
         if source.width <= 0 or source.height <= 0:
             raise ValueError("empty dimensions")
@@ -85,12 +91,12 @@ async def preprocess_image(
         preprocessing=PreprocessingSettings(threshold=threshold, invert=invert, edge_method="pillow_find_edges"),
         statistics=PointCloudStatistics(**result.statistics),
         artifacts=PreprocessingArtifacts(
-            original=_as_data_url(result.original),
-            grayscale=_as_data_url(result.grayscale),
-            edges=_as_data_url(result.edges),
-            processed=_as_data_url(result.processed),
+            original=_as_data_url(render_image_preview(result.original)),
+            grayscale=_as_data_url(render_image_preview(result.grayscale)),
+            edges=_as_data_url(render_image_preview(result.edges)),
+            processed=_as_data_url(render_image_preview(result.processed)),
             point_cloud=_as_data_url(point_cloud_image),
-            preview_points=_preview_points(result.point_cloud),
+            preview_points=_preview_points(result.point_cloud, result.config.random_seed),
         ),
         processing_time_ms=round(result.processing_time_ms, 2),
     ))
